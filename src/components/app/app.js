@@ -22,12 +22,8 @@ function App() {
                 <AppFilter/>
             </div>
 
-<<<<<<< HEAD
-            <EmployeesList/>
-            <EmployeesAddForm/>
-=======
             <EmployeesList data={data}/>
->>>>>>> employees-list
+            <EmployeesAddForm/>
         </div>
     )
 }
