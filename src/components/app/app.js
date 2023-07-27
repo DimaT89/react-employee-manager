@@ -64,14 +64,22 @@ class App extends Component {
                 if (item.id === id) {
                     return {...item, increase: !item.increase}
                 }
-                
+
                 return item
             })
         }))
     }
 
     onToggleRise = (id) => {
-        console.log(`Rise this ${id}`)
+        this.setState(({data}) => ({
+            data: data.map(item => {
+                if (item.id === id) {
+                    return {...item, rise: !item.rise}
+                }
+
+                return item
+            })
+        }))
     }
 
     render() {
