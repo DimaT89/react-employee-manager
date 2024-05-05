@@ -1,129 +1,141 @@
-import {Component} from "react";
-
-import AppInfo from "../app-info/app-info";
-import SearchPanel from "../search-panel/search-panel";
-import AppFilter from "../app-filter/app-filter";
-import EmployeesList from "../employees-list/employees-list";
-import EmployeesAddForm from "../employees-add-form/employees-add-form";
-
+import React, {Component} from 'react';
 import './app.css'
+import AppInfo from '../app-info/app-info';
+import SearchPanel from '../search-panel/search-panel';
+import AppFilter from '../app-filter/app-filter';
+import EmployeesList from '../employees-list/employees-list';
+import EmployeesAddForm from '../employees-add-form/employees-add-form';
 
 class App extends Component {
-    constructor(props) {
-        super(props);
+	constructor(props) {
+		super(props);
+		this.state = {
+			data: [
+				{name: 'John C.', salary: '800', increase: false, rise: true, id: 1},
+				{name: 'Alex M.', salary: '3000', increase: false, rise: false, id: 2},
+				{name: 'Carl W.', salary: '15000', increase: true, rise: false, id: 3},
+			],
+			query: '',
+			filter: 'all'
+		}
+		this.maxId = 4
+	}
 
-        this.state = {
-            data: [
-                {name: 'John C.', salary: 800, increase: false, rise: true, id: 1},
-                {name: 'Alex M.', salary: 3000, increase: true, rise: false, id: 2},
-                {name: 'Carl W.', salary: 5000, increase: false, rise: false, id: 3}
-            ],
-            term: '',
-            filter: 'all',
-        }
+	/* addItem */
+	addItem = (name, salary) => {
+		const newItem = {
+			name,
+			salary,
+			increase: false,
+			rise: false,
+			id: this.maxId++
+		}
 
-        this.maxId = 4
-    }
+		this.setState(({data}) => {
+			const newArr = [...data, newItem]
+			return {
+				data: newArr
+			}
+		})
+	}
 
-    deleteItem = (id) => {
-        this.setState(({data}) => ({
-            data: data.filter(item => item.id !== id)
-        }))
-    }
+	/* deleteItem */
+	deleteItem = (id) => {
+		this.setState(({data}) => ({
+			data: data.filter(item => item.id !== id)
+		}))
+	}
 
-    addItem = (name, salary) => {
-        const newItem = {
-            name,
-            salary,
-            increase: false,
-            rise: false,
-            id: this.maxId++
-        }
+	/* onToggleProp */
+	onToggleProp = (id, prop) => {
+		this.setState(({data}) => ({
+			data: data.map(item => {
+				if (item.id === id) {
+					return {...item, [prop]: !item[prop]}
+				}
+				return item;
+			})
+		}))
+	}
 
-        this.setState(({data}) => {
-            const newArr = [...data, newItem]
+	/* searchItems */
+	searchItems = (items, query) => {
+		if (query.length === 0) return items
 
-            return {
-                data: newArr
-            }
-        })
-    }
+		return items.filter(item => item.name.toLowerCase().includes(query.toLowerCase()))
+	}
 
-    onToggleProp = (id, prop) => {
-        this.setState(({data}) => ({
-            data: data.map(item => {
-                if (item.id === id) {
-                    return {...item, [prop]: !item[prop]}
-                }
+	onUpdateSearch = (query) => {
+		this.setState({query})
+	}
 
-                return item
-            })
-        }))
-    }
+	/* filterPost */
+	filterPost = (items, filter) => {
+		switch (filter) {
+			case 'rise':
+				return items.filter(item => item.rise)
+			case 'moreThen1000':
+				return items.filter(item => item.salary > 1000)
+			default:
+				return items
+		}
+	}
 
-    searchEmp = (items, term) => {
-        if (term.length === 0) {
-            return items
-        }
+	/* onFilterSelect */
+	onFilterSelect = (filter) => {
+		this.setState({filter})
+	}
 
-        return items.filter(item => {
-            return item.name.indexOf(term) > -1
-        })
-    }
+	/* onChangeSalary */
+	onChangeSalary = (name, salary) => {
+		this.setState(({data}) => ({
+			data: data.map(item => {
+				if (item.name === name) {
+					return {...item, salary: salary}
+				}
 
-    onUpdateSearch = (term) => {
-        this.setState({term})
-    }
+				return item
+			})
+		}))
+	}
 
-    filterPost = (items, filter) => {
-        switch (filter) {
-            case 'rise':
-                return items.filter(item => item.rise)
-            case 'moreThen100':
-                return items.filter(item => item.salary > 1000)
-            default:
-                return items
-        }
-    }
+	render() {
+		const {data, query, filter} = this.state
+		const employees = this.state.data.length
+		const increased = this.state.data.reduce((count, item) => {
+			return item.increase ? count + 1 : count
+		}, 0)
+		const visibleData = this.filterPost(this.searchItems(data, query), filter)
 
-    onFilterSelect = (filter) => {
-        this.setState({filter})
-    }
+		return (
+			<div className="App">
+				<AppInfo
+					employees={employees}
+					increased={increased}
+				/>
 
-    render() {
-        const {data, term, filter} = this.state
-        const employees = this.state.data.length
-        const increased = this.state.data.filter(item => item.increase).length
-        const visibleData = this.filterPost(this.searchEmp(data, term), filter)
+				<div className="search-panel">
+					<SearchPanel
+						onUpdateSearch={this.onUpdateSearch}
+					/>
 
-        return (
-            <div className={'app'}>
-                <AppInfo
-                    employees={employees}
-                    increased={increased}
-                />
+					<AppFilter
+						filter={filter}
+						onFilterSelect={this.onFilterSelect}
+					/>
+				</div>
 
-                <div className={'search-panel'}>
-                    <SearchPanel
-                        onUpdateSearch={this.onUpdateSearch}
-                    />
+				<EmployeesList
+					onDelete={this.deleteItem}
+					data={visibleData}
+					onToggleProp={this.onToggleProp}
+					onChangeSalary={(name, salary) => this.onChangeSalary(name, salary)}
+				/>
 
-                    <AppFilter
-                        filter={filter}
-                        onFilterSelect={this.onFilterSelect}
-                    />
-                </div>
-
-                <EmployeesList
-                    data={visibleData}
-                    onDelete={this.deleteItem}
-                    onToggleProp={this.onToggleProp}
-                />
-
-                <EmployeesAddForm onAdd={this.addItem}/>
-            </div>
-        )
-    }
+				<EmployeesAddForm onAdd={this.addItem}/>
+			</div>
+		);
+	}
 }
 
-export default App
+export default App;
